@@ -1,0 +1,9 @@
+---
+apiVersion: v2
+name: snooze-otlp
+version: 1.0.0
+appVersion: 1.0.0
+description: |
+  Opentelemetry input plugin for snooze. Listen
+  on opentelemetry gRPC, and send alerts to
+  a snooze URL.

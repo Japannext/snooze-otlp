@@ -1,0 +1,31 @@
+---
+replicas: 2
+revisionHistoryLimit: 3
+
+partOf: snooze
+
+# The log level of the application.
+# Accepted values: trace/debug/info/warning/error/fatal/panic
+logLevel: "info"
+
+podAnnotations: {}
+
+prometheus:
+  enabled: true
+  port: 9317
+  podMonitor:
+    enabled: false
+    labels: {}
+
+image:
+  name: snooze-otlp
+  repo: ghrc.io/japannext/snooze-otlp
+  tag: ""
+  pullPolicy: IfNotPresent
+
+otlp:
+  grpcPort: 4317
+
+snooze:
+  url: ""
+  caConfigMap: ""

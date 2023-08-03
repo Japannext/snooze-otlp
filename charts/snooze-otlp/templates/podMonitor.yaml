@@ -1,0 +1,20 @@
+{{- with .Values.prometheus.podMonitor }}
+{{- if .enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: "{{ $.Release.Name }}"
+  namespace: "{{ $.Release.Namespace }}"
+  labels: {{ toYaml .labels | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: snooze-otlp
+      app.kubernetes.io/instance: "{{ $.Release.Name }}"
+  podMetricsEndpoints:
+  - path: /metrics
+    port: metrics
+    scheme: http
+{{- end }}
+{{- end }}

@@ -1,0 +1,4 @@
+build
+.env
+.values.yaml
+.helmfile.yaml

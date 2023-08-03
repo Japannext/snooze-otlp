@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    app.kubernetes.io/name: snooze-otlp
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: otlp-listener
+    app.kubernetes.io/part-of: "{{ .Values.partOf }}"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 4317
+    targetPort: otlp-grpc
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: snooze-otlp
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+  sessionAffinity: None
