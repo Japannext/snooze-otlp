@@ -36,14 +36,56 @@ SNOOZE_OTLP_SNOOZE_URL=https://snooze.example.com
 SNOOZE_OTLP_CA_PATH=/tls/ca.crt
 ```
 
-## Binary
-
-WIP
-
 # opentelemetry-collector
 
-Here is an example of opentelemetry-collector configuration:
+Here is an example of opentelemetry-collector configuration.
+This create an instance of otelcol that listen on OTLP log protocol, append kubernetes pod metadata,
+and forward it to snooze (via snooze-otlp).
 ```yaml
 ---
-# WIP
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: ${MY_POD_IP}:4317
+      http:
+        endpoint: ${MY_POD_IP}:4318
+processors:
+  k8sattributes:
+    extract:
+      metadata:
+      - k8s.namespace.name
+      - k8s.deployment.name
+      - k8s.statefulset.name
+      - k8s.daemonset.name
+      - k8s.cronjob.name
+      - k8s.job.name
+    passthrough: false
+    pod_association:
+    - sources:
+      - from: resource_attribute
+        # Allow pods to send OTLP logs to this instance,
+        # and have their metadata detected based on their
+        # source IP.
+        name: k8s.pod.ip
+    - sources:
+      - from: resource_attribute
+        name: k8s.pod.uid
+    - sources:
+      - from: connection
+exporters:
+  otlp/snooze:
+    compression: none
+    # When snooze-otlp is deployed in the same namespace as otel-collector
+    endpoint: snooze-otlp:4317
+    tls:
+      insecure: true
+pipelines:
+  logs:
+    receivers:
+    - otlp
+    processors:
+    - k8sattributes
+    exporters:
+    - otlp/snooze
 ```
