@@ -80,12 +80,13 @@ exporters:
     endpoint: snooze-otlp:4317
     tls:
       insecure: true
-pipelines:
-  logs:
-    receivers:
-    - otlp
-    processors:
-    - k8sattributes
-    exporters:
-    - otlp/snooze
+service:
+  pipelines:
+    logs:
+      receivers:
+      - otlp
+      processors:
+      - k8sattributes
+      exporters:
+      - otlp/snooze
 ```
