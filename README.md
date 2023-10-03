@@ -9,9 +9,10 @@ and forward them to a snooze instance in the correct format.
 
 ## Helm chart
 
+You can apply the helm chart as-is:
+
 ```bash
-helm repo add jnx japannext.github.com/helm-charts
-helm install jnx/snooze-otlp -f values.yaml
+helm install ./charts/snooze-otlp -f values.yaml
 ```
 
 Example of a basic configuration:
@@ -24,8 +25,14 @@ snooze:
 
 ## Docker
 
+You can build the local docker image like so:
 ```bash
-docker run ghcr.io/japannext/snooze-otlp:latest \
+docker build .
+```
+
+Then run it as such:
+```bash
+docker run <id> \
     --env-file env.list \
     -v /etc/pki/tls/cert.pem:/tls/ca.crt:ro
 ```
