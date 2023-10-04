@@ -16,6 +16,9 @@ type SnoozeAlertV1 struct {
 	Host       string            `json:"host"`
 	Process    string            `json:"process"`
 	Severity   string            `json:"severity"`
+  ExceptionType string         `json:"exception_type,omitempty"`
+  ExceptionMessage string      `json:"exception_message,omitempty"`
+  ExceptionStack string         `json:"exception_trace,omitempty"`
 	Message    string            `json:"message"`
 	Attributes map[string]string `json:"attributes"`
 }
@@ -47,8 +50,9 @@ func populateKubernetes(alert *SnoozeAlertV1, ra map[string]string) {
 		alert.Attributes["k8s_kind"] = "job"
 		alert.Attributes["k8s_job_name"] = name
 		alert.Process = fmt.Sprintf("job/%s", name)
-
-	}
+	} else if svc, ok := ra["service.name"]; ok {
+    alert.Process = svc
+  }
 
 	var cluster string
 	var ns string
@@ -60,7 +64,9 @@ func populateKubernetes(alert *SnoozeAlertV1, ra map[string]string) {
 	}
 	if ns, ok = ra["k8s.namespace.name"]; ok {
 		alert.Attributes["k8s_namespace_name"] = ns
-	} else {
+  } else if ns, ok := ra["service.namespace"]; ok {
+    alert.Attributes["k8s_namespace_name"] = ns
+  } else {
 		ns = "-"
 	}
 
@@ -76,6 +82,42 @@ func populateKubernetes(alert *SnoozeAlertV1, ra map[string]string) {
 		alert.Attributes["k8s_container_name"] = name
 	}
 
+	alert.Source = "otel/k8s"
+}
+
+// Populate the alert with syslog metadata
+func populateSyslog(alert *SnoozeAlertV1, ra, la map[string]string) {
+
+  if hostname, ok := ra["host.name"]; ok {
+    alert.Host = hostname
+  }
+
+  if svc, ok := ra["service.name"]; ok {
+    alert.Process = svc
+  } else if cmd, ok := la["process.executable.name"]; ok {
+    alert.Process = cmd
+  }
+
+  for k, v := range la {
+    alert.Attributes[k] = v
+  }
+
+  alert.Source = "otel/syslog"
+
+}
+
+func populateException(alert *SnoozeAlertV1, la map[string]string) {
+
+  if etype, ok := la["exception.type"]; ok {
+    alert.ExceptionType = etype
+  }
+  if msg, ok := la["exception.message"]; ok {
+    alert.ExceptionMessage = msg
+  }
+  if stack, ok := la["exception.stacktrace"]; ok {
+    alert.ExceptionStack = stack
+  }
+
 }
 
 // Convert an opentelemetry record log (with resource and scope contexts) to a snooze alert
@@ -87,21 +129,27 @@ func convertAlert(resource *resv1.Resource, scope *commonv1.InstrumentationScope
 	// Building attributes
 	ra := kvToMap(resource.Attributes)
 	//sa := kvToMap(scope.Attributes)
-	//la := kvToMap(lr.Attributes)
+	la := kvToMap(lr.Attributes)
+
+	alert.Source = "otel"
 
 	if hasPrefixedKey(ra, "k8s.") {
 		populateKubernetes(&alert, ra)
-	}
+	} else if hasPrefixedKey(ra, "host.") {
+    populateSyslog(&alert, ra, la)
+  } else {
+    if name, ok := ra["service.name"]; ok {
+      alert.Process = name
+    }
+  }
 
-	alert.Source = "otel"
+  if hasPrefixedKey(la, "exception.") {
+    populateException(&alert, la)
+  }
 
 	alert.Timestamp = formatTime(lr.TimeUnixNano)
 	if lr.ObservedTimeUnixNano != 0 {
 		alert.Attributes["observed_time"] = formatTime(lr.ObservedTimeUnixNano)
-	}
-
-	if name, ok := ra["service.name"]; ok {
-		alert.Process = name
 	}
 
 	alert.Attributes["trace_id"] = Hex(lr.TraceId)

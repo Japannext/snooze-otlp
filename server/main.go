@@ -75,7 +75,7 @@ func initLogging() {
 }
 
 func Run() {
-  log.Infof("Starting snooze-otlp %s", Version)
+  log.Infof("Starting snooze-otlp %s-%s", Version, Commit)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", Config.GrpcListeningPort))
 	if err != nil {

@@ -6,8 +6,9 @@ import (
 
 var (
   Version string
+  Commit string
 )
 
 func PrintVersion() {
-  fmt.Println(Version)
+  fmt.Printf("%s-%s", Version, Commit)
 }

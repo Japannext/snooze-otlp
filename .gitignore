@@ -4,3 +4,4 @@ build
 .helmfile.yaml
 .ca-bundle/*
 .make.env
+.charts

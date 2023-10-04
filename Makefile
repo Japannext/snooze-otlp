@@ -3,7 +3,7 @@ VERSION := 1.0.0
 COMMIT := $(shell git rev-parse --short HEAD)
 
 # Default to RHEL bundle. Override it in .make.env
-export CA_BUNDLE=/etc/pki/ca-trust/source/anchors/
+export CA_BUNDLE="${CA_BUNDLE:/etc/pki/ca-trust/source/anchors/}"
 
 # Override local dev environment
 ifeq ($(shell test -e .make.env && echo yes), yes)
