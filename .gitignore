@@ -2,3 +2,5 @@ build
 .env
 .values.yaml
 .helmfile.yaml
+.ca-bundle/*
+.make.env
