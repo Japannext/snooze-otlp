@@ -1,4 +1,5 @@
 NAME := snooze-otlp
+REPO := ghcr.io/japannext/snooze-otlp
 VERSION := 1.0.0
 COMMIT := $(shell git rev-parse --short HEAD)
 
@@ -45,3 +46,9 @@ develop:
 	helm cm-push .charts/$(NAME)-0.0.0-dev.tgz jnx-repo-upload
 	@echo -e "${INFO}5) Running helmfile${RESET}"
 	helmfile -f .helmfile.yaml sync
+
+release:
+	@echo -e "${INFO}1) Building docker image${RESET}"
+	docker build -t $(REPO):$(VERSION) --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) .
+	@echo -e "${INFO}2) Uploading docker image${RESET}"
+	docker push $(REPO):$(VERSION)
